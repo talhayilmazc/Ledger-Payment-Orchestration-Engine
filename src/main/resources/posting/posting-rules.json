@@ -1,0 +1,25 @@
+{
+  "rules": [
+    {
+      "product": "P2P_TRANSFER",
+      "channel": "MOBILE",
+      "debitAccount": "ACC:{{customerNo}}:DEPOSIT",
+      "creditAccount": "SUSPENSE:P2P_OUT",
+      "description": "Customer P2P outgoing - suspense"
+    },
+    {
+      "product": "P2P_SETTLEMENT",
+      "channel": "BATCH",
+      "debitAccount": "SUSPENSE:P2P_OUT",
+      "creditAccount": "ACC:{{counterpartyCustomerNo}}:DEPOSIT",
+      "description": "P2P settlement batch posting"
+    },
+    {
+      "product": "BILL_PAYMENT",
+      "channel": "MOBILE",
+      "debitAccount": "ACC:{{customerNo}}:DEPOSIT",
+      "creditAccount": "SUSPENSE:BILLPAY",
+      "description": "Bill payment - suspense until settlement"
+    }
+  ]
+}

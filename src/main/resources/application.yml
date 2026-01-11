@@ -1,0 +1,31 @@
+server:
+  port: 9300
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/ledger
+    username: ledger
+    password: ledger
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+app:
+  postingRulesPath: classpath:posting/posting-rules.json
+  defaultCurrency: TRY
+  limits:
+    dailyAmountCents: 200000000   # 2,000,000.00 TRY
+    perTxAmountCents: 50000000    # 500,000.00 TRY
