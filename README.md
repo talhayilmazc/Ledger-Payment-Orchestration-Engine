@@ -1,115 +1,150 @@
-# Ledger & Payment Orchestration Engine  
-**A Bank-Grade Core Banking Component**
+# Ledger — Payment Orchestration Engine
 
-This project is a **production-style core banking engine** that demonstrates how modern banks build **payments, ledgers, and financial correctness** systems.
+> Bank-grade double-entry accounting, idempotent payment processing, and financial reconciliation engine.
+> Java 17 + Spring Boot 3 + PostgreSQL + Kafka + Redis + Docker + CI/CD
 
-It is not a CRUD demo — it is a **financially correct, audit-ready, idempotent, double-entry accounting engine** designed to resemble what actually runs inside banks.
+![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-green?logo=springboot)
+![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.7-black?logo=apachekafka)
+![Redis](https://img.shields.io/badge/Redis-7-red?logo=redis)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue?logo=docker)
+![CI](https://github.com/talhayilmazc/Ledger-Payment-Orchestration-Engine/actions/workflows/ci.yml/badge.svg)
 
 ---
 
-## 🏦 Why this project matters
+## 🏦 Why This Project Matters
 
-In real banks, **money is not updated with UPDATE balance = balance - X**.
+In real banks, money is **never** updated with `UPDATE balance = balance - X`.
 
 Instead, banks use:
-- **Double-entry accounting**
-- **Immutable ledgers**
-- **Posting rules**
-- **Idempotent payment processing**
-- **Reconciliation and auditability**
+- Double-entry accounting
+- Immutable ledger entries
+- JSON-based posting rules
+- Idempotent payment processing
+- Reconciliation and auditability
 
-This project implements all of them.
-
----
-
-## 🧠 What this system does
-
-It provides a **realistic core-banking style payment flow**:
-
-1. **Authorize payment**  
-   - Idempotent (safe retries)
-   - Per-transaction and daily limits
-   - Customer & channel aware
-
-2. **Settle payment**
-   - Uses **JSON-based posting rules**
-   - Creates **double-entry ledger postings**
-   - Updates balances atomically
-
-3. **Ledger**
-   - Every movement creates:
-     - 1 DEBIT
-     - 1 CREDIT
-   - Same amount, same currency
-   - Same journal ID
-
-4. **Reconciliation**
-   - Verifies that payments match ledger postings
-   - Ensures financial correctness
+**This project implements all of them** — and adds Kafka event streaming, Redis caching, and production-grade observability on top.
 
 ---
 
-## 🧱 Architecture
+## 🧠 What This System Does
 
+A realistic core-banking style payment flow:
+
+**1. Authorize Payment**
+- Idempotency check (safe retries — no duplicate debits)
+- Per-transaction and daily limits
+- Customer & channel aware
+- Publishes `PAYMENT_AUTHORIZED` event to Kafka
+
+**2. Settle Payment**
+- Resolves JSON-based posting rules by product + channel
+- Creates double-entry ledger postings atomically
+- Updates balances transactionally
+- Publishes `PAYMENT_SETTLED` event to Kafka
+
+**3. Ledger**
+- Every movement creates exactly: 1 DEBIT + 1 CREDIT
+- Same amount, same currency, same journal ID
+- Immutable — entries are never modified
+
+**4. Reconciliation**
+- Verifies payments match ledger postings
+- Checks: Debit = Credit = Payment amount
+- Ensures financial correctness
+
+---
+
+## 🏗️ Architecture
 Client / Channel
-|
-v
-Payment API ───► PaymentInstruction (idempotent)
-|
-v
-Posting Rules Engine (JSON)
-|
-v
-Ledger Service (Double-Entry)
-|
-v
-PostgreSQL Ledger
-
-yaml
-Kodu kopyala
+│
+▼
+Payment API (REST)
+│
+├──► Idempotency Check (Redis cache)
+│
+├──► Limit Validation (per-tx + daily)
+│
+▼
+PaymentInstruction (PostgreSQL)
+│
+▼
+PostingRuleEngine (JSON rules)
+│
+▼
+LedgerService (Double-Entry)
+│
+├──► LedgerEntry x2 (DEBIT + CREDIT) → PostgreSQL
+│
+└──► Kafka Events → payment-events / ledger-events / payment-failed
 
 ---
 
-## 🛡️ Banking-grade features
+## 🛡️ Banking-Grade Features
 
-| Feature | Why banks need it |
-|------|----------------|
+| Feature | Why Banks Need It |
+|---|---|
 | Double-entry ledger | Prevents money creation/destruction |
 | Idempotency keys | Prevents duplicate debits |
-| Posting rules | Allows accounting to change without code |
+| JSON posting rules | Accounting changes without code deploy |
 | Suspense accounts | How real banks handle pending settlements |
-| Limits | Regulatory & risk control |
+| Daily limits | Regulatory & risk control |
 | Reconciliation | Audit & financial integrity |
 | Immutable ledger | Compliance & dispute handling |
+| Kafka event streaming | Async downstream integration |
+| Redis caching | High-performance idempotency lookups |
 | Prometheus metrics | Production observability |
 
 ---
 
 ## ⚙️ Tech Stack
 
-- **Java 17**
-- **Spring Boot 3**
-- **PostgreSQL**
-- **Docker & Docker Compose**
-- **Spring Data JPA**
-- **Prometheus / Actuator**
+| Layer | Technology |
+|---|---|
+| Language | Java 17 |
+| Framework | Spring Boot 3.3 |
+| Database | PostgreSQL 16 + Spring Data JPA |
+| Event Streaming | Apache Kafka — 3 topics (payment-events, ledger-events, payment-failed) |
+| Caching | Redis 7 |
+| API Docs | SpringDoc OpenAPI / Swagger UI |
+| Observability | Micrometer + Prometheus + Actuator |
+| Build | Gradle 8.10 |
+| DevOps | Docker, Docker Compose, GitHub Actions CI/CD |
+| Testing | JUnit 5, Mockito — 9 unit tests |
 
 ---
 
-## 🚀 Running locally
+## 🚀 Running Locally
+
+### Prerequisites
+- Docker Desktop
+- Java 17
+
+### Start all services
 
 ```bash
 docker compose up -d --build
-Check:
+```
 
-Health → http://localhost:9300/actuator/health
+This starts:
+- **App** → http://localhost:9300
+- **PostgreSQL** → localhost:5433
+- **Redis** → localhost:6382
+- **Kafka** → localhost:9094
+- **Kafka UI** → http://localhost:8092
 
-Metrics → http://localhost:9300/actuator/prometheus
+### Endpoints
+Swagger UI  → http://localhost:9300/swagger-ui/index.html
+Health      → http://localhost:9300/actuator/health
+Metrics     → http://localhost:9300/actuator/prometheus
 
-💳 Example Flow
-1️⃣ Authorize payment
-bash
-Kodu kopyala
+---
+
+## 💳 Example Payment Flow
+
+**1️⃣ Authorize payment**
+```bash
 POST /v1/payments/authorize
 {
   "idempotencyKey": "IDEM-001",
@@ -120,73 +155,85 @@ POST /v1/payments/authorize
   "amountCents": 1500000,
   "currency": "TRY"
 }
-2️⃣ Settle
-bash
-Kodu kopyala
+```
+
+**2️⃣ Settle**
+```bash
 POST /v1/payments/{paymentId}/settle
-This creates:
+```
 
-Debit: ACC:CUST0001:DEPOSIT
+This creates in the ledger:
+- `DEBIT: ACC:CUST0001:DEPOSIT — 15,000.00 TRY`
+- `CREDIT: SUSPENSE:P2P_OUT — 15,000.00 TRY`
 
-Credit: SUSPENSE:P2P_OUT
+Both entries share the same `journalId` and are immutable.
 
-Both recorded in the ledger.
-
-🔍 Reconciliation
-bash
-Kodu kopyala
+**3️⃣ Reconcile**
+```bash
 GET /v1/recon/payment/{paymentId}
-Checks:
+```
 
-Exactly 2 ledger entries exist
+Checks: exactly 2 ledger entries exist, Debit = Credit = Payment amount.
 
-Debit = Credit
+---
 
-Amount matches the payment
+## 📊 Kafka Topics
 
-🧩 Why recruiters care
-This project proves I understand:
+| Topic | Event Types |
+|---|---|
+| `payment-events` | PAYMENT_AUTHORIZED |
+| `ledger-events` | PAYMENT_SETTLED |
+| `payment-failed` | PAYMENT_FAILED |
 
-Core banking accounting
+---
 
-Transaction safety
+## 📁 Project Structure
+src/main/java/com/bank/ledger/
+├── api/          # PaymentController, AccountController, ReconciliationController
+├── config/       # KafkaConfig, RedisConfig, OpenApiConfig
+├── domain/       # PaymentInstruction, LedgerEntry, Account, IdempotencyKey
+├── kafka/        # PaymentEventProducer
+├── repo/         # JPA Repositories
+└── service/      # PaymentService, LedgerService, PostingRuleEngine, LimitService, ReconciliationService
 
-Financial correctness
+---
 
-Idempotency
+## 🧪 Testing
 
-Real-world payment flows
+```bash
+./gradlew test
+```
 
-Audit & compliance thinking
+- ✅ LedgerServiceTest — 5 unit tests
+- ✅ PaymentServiceTest — 3 unit tests
+- ✅ LedgerApplicationTests — context loads
 
-This is the same foundation used by:
+---
 
-Payment gateways
+## 🔄 CI/CD Pipeline
 
-Core banking systems
+GitHub Actions on every push:
 
-Fintechs
+1. **Build & Test** — `./gradlew clean build` + `./gradlew test`
+2. **Docker Build** — builds image on `main` and `develop`
 
-Treasury platforms
+---
 
-AML & Fraud systems
+## 🧩 Why Recruiters Care
 
-📈 Production extensions (not implemented but designed for)
-Maker-checker approvals
+This project proves understanding of:
+- Core banking accounting principles
+- Transaction safety and atomicity
+- Financial correctness and idempotency
+- Real-world payment flows
+- Audit & compliance thinking
+- Event-driven architecture
 
-Reversals & chargebacks
+The same foundation used by payment gateways, core banking systems, fintechs, and treasury platforms.
 
-FX legs
+---
 
-Fees & commissions
+## 👨‍💻 Author
 
-End-of-day batch posting
-
-GL exports
-
-External settlement file ingestion
-
-🏁 Summary
-This is a bank-grade payment and ledger engine, not a toy project.
-
-It demonstrates how money should be handled correctly, safely, and auditable in a real financial institution.
+**Talha Yılmaz**
+[github.com/talhayilmazc](https://github.com/talhayilmazc) · [linkedin.com/in/talha-yilmaz-38a13a225](https://linkedin.com/in/talha-yilmaz-38a13a225)
