@@ -1,3 +1,4 @@
+@"
 .gradle/
 build/
 *.jar
@@ -9,3 +10,4 @@ build/
 .env
 *.log
 logs/
+"@ | Out-File -FilePath .gitignore -Encoding utf8
