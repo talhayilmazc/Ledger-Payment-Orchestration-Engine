@@ -36,7 +36,7 @@ public class PaymentService {
                           LimitService limits,
                           LedgerService ledger,
                           MetricsService metrics,
-                          org.springframework.beans.factory.annotation.Value("${app.defaultCurrency}") String defaultCurrency) {
+                          @org.springframework.beans.factory.annotation.Value("${app.defaultCurrency}") String defaultCurrency) {
         this.payRepo = payRepo;
         this.idemRepo = idemRepo;
         this.accountRepo = accountRepo;
