@@ -17,7 +17,7 @@ public class PostingRuleEngine {
 
     public PostingRuleEngine(
             ResourceLoader loader,
-            org.springframework.beans.factory.annotation.Value("${app.postingRulesPath}") String rulesPath
+            @org.springframework.beans.factory.annotation.Value("${app.postingRulesPath}") String rulesPath
     ) throws Exception {
         Resource r = loader.getResource(rulesPath);
         String json = new String(r.getInputStream().readAllBytes(), StandardCharsets.UTF_8);

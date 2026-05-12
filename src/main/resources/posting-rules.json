@@ -1,0 +1,25 @@
+{
+  "rules": [
+    {
+      "product": "P2P_TRANSFER",
+      "channel": "MOBILE",
+      "debitAccount": "ACC:{{customerNo}}:DEPOSIT",
+      "creditAccount": "SUSPENSE:P2P_OUT",
+      "description": "P2P Transfer debit"
+    },
+    {
+      "product": "P2P_TRANSFER",
+      "channel": "API",
+      "debitAccount": "ACC:{{customerNo}}:DEPOSIT",
+      "creditAccount": "SUSPENSE:P2P_OUT",
+      "description": "P2P Transfer debit via API"
+    },
+    {
+      "product": "BILL_PAYMENT",
+      "channel": "MOBILE",
+      "debitAccount": "ACC:{{customerNo}}:DEPOSIT",
+      "creditAccount": "SUSPENSE:BILLPAY",
+      "description": "Bill payment debit"
+    }
+  ]
+}

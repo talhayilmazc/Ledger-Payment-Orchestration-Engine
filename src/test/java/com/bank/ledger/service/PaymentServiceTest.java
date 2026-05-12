@@ -45,9 +45,7 @@ class PaymentServiceTest {
     private MetricsService metrics;
 
     @InjectMocks
-    private PaymentService paymentService = new PaymentService(
-            null, null, null, null, null, null, null, "TRY"
-    );
+    private PaymentService paymentService;
 
     @Test
     @DisplayName("should return existing payment for duplicate idempotency key")
